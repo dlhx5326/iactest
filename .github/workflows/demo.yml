@@ -1,0 +1,19 @@
+name: My First Workflow
+run-name: ${{ github.actor }} is learning GitHub Actions
+on: [push]
+
+jobs:
+  explore-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Print environment info
+        run: |
+          echo "🎉 Triggered by a ${{ github.event_name }} event."
+          echo "🐧 Running on a ${{ runner.os }} server."
+          echo "🔎 Branch: ${{ github.ref }}, Repo: ${{ github.repository }}."
+
+      - name: List repository files
+        run: ls -la ${{ github.workspace }}
