@@ -1,19 +1,36 @@
-name: My First Workflow
-run-name: ${{ github.actor }} is learning GitHub Actions
-on: [push]
+name: IaC Security Scan
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/Dockerfile'
+
+permissions:
+  contents: read
+  security-events: write
 
 jobs:
-  explore-job:
+  iac-security:
+    name: IaC Security Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-      - name: Print environment info
-        run: |
-          echo "🎉 Triggered by a ${{ github.event_name }} event."
-          echo "🐧 Running on a ${{ runner.os }} server."
-          echo "🔎 Branch: ${{ github.ref }}, Repo: ${{ github.repository }}."
+      - name: Run Checkov (warn-only)
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: dockerfile,github_actions,yaml
+          external_checks_dir: .checkov/compose_checks
+          output_format: sarif
+          output_file_path: checkov-iac.sarif
+          quiet: true
+          soft_fail: true
 
-      - name: List repository files
-        run: ls -la ${{ github.workspace }}
+      - name: Upload Checkov SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: checkov-iac.sarif
